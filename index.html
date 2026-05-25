@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>이탈리아 가족여행 2027.01</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'ir': '#c1440e',
+            'ig': '#d4af37',
+            'ic': '#fff8f0',
+          },
+          fontFamily: {
+            'serif': ['"Playfair Display"', 'serif'],
+            'sans': ['"Noto Sans KR"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Noto Sans KR', sans-serif; background: #fff8f0; }
+    .playfair { font-family: 'Playfair Display', serif; }
+    .hero-bg {
+      background: linear-gradient(160deg, #1a0a00 0%, #3d1200 40%, #6b2100 70%, #8b2500 100%);
+    }
+    .day-border-rome   { border-left: 4px solid #c1440e; }
+    .day-border-bologna{ border-left: 4px solid #8b0000; }
+    .day-border-milan  { border-left: 4px solid #1565c0; }
+    .tab-btn { @apply flex-shrink-0 px-4 py-3 text-sm font-medium transition-all duration-200 whitespace-nowrap border-b-2 border-transparent; }
+    .tab-active-rome    { @apply border-ir text-ir bg-red-50; }
+    .tab-active-bologna { @apply border-red-900 text-red-900 bg-red-50; }
+    .tab-active-milan   { @apply border-blue-700 text-blue-700 bg-blue-50; }
+    .tab-active-default { @apply border-ir text-ir bg-orange-50; }
+    .section-card { @apply bg-white rounded-2xl shadow-sm p-6 mb-4; }
+    .badge { @apply text-xs px-2 py-0.5 rounded-full font-medium; }
+  </style>
+</head>
+<body x-data="app()" x-init="init()">
+
+<!-- ===== 히어로 ===== -->
+<div class="hero-bg text-white pt-14 pb-10 px-4">
+  <div class="max-w-5xl mx-auto text-center">
+    <p class="text-ig text-xs tracking-[0.3em] uppercase mb-3">Family Trip · January 2027</p>
+    <h1 class="playfair text-5xl md:text-6xl font-bold mb-4">
+      🇮🇹 이탈리아 가족여행
+    </h1>
+    <p class="text-2xl text-orange-200 mb-8">2027년 1월 13일 ~ 24일 · 10박 11일</p>
+    <div class="flex flex-wrap justify-center gap-3 text-sm">
+      <span class="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">👨‍👩‍👧 아빠 · 엄마 · 딸(21세)</span>
+      <span class="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">✈️ 인천 ↔ 로마 — 볼로냐 — 밀라노</span>
+      <span class="bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">🌿 하루 2~3곳, 조용하고 운치 있는 여행</span>
+    </div>
+
+    <!-- 도시 요약 카드 (히어로 내부) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-10 text-left">
+      <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+        <div class="text-3xl mb-2">🏛️</div>
+        <h3 class="font-bold text-lg">로마</h3>
+        <p class="text-orange-200 text-sm">1/14(목) ~ 1/16(토) · 3박</p>
+        <p class="text-orange-100 text-xs mt-2">판테온 · 바티칸 · 콜로세오</p>
+        <p class="text-orange-200 text-xs">Hotel Raphael</p>
+      </div>
+      <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+        <div class="text-3xl mb-2">🏰</div>
+        <h3 class="font-bold text-lg">볼로냐</h3>
+        <p class="text-orange-200 text-sm">1/17(일) ~ 1/19(화) · 3박</p>
+        <p class="text-orange-100 text-xs mt-2">아케이드 · 아르키진나시오 · 미식</p>
+        <p class="text-orange-200 text-xs">Art Hotel Novecento</p>
+      </div>
+      <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20">
+        <div class="text-3xl mb-2">🏙️</div>
+        <h3 class="font-bold text-lg">밀라노</h3>
+        <p class="text-orange-200 text-sm">1/20(수) ~ 1/22(금) · 3박</p>
+        <p class="text-orange-100 text-xs mt-2">두오모 · 최후의 만찬 · 브레라</p>
+        <p class="text-orange-200 text-xs">Portrait Milano</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 탭 네비게이션 ===== -->
+<nav class="sticky top-0 z-50 bg-white shadow-md border-b border-gray-100">
+  <div class="max-w-5xl mx-auto flex overflow-x-auto scrollbar-hide">
+    <template x-for="t in tabs" :key="t.id">
+      <button
+        @click="activeTab = t.id"
+        :class="activeTab === t.id ? 'tab-active-default font-semibold' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'"
+        class="tab-btn"
+        x-text="t.label"
+      ></button>
+    </template>
+  </div>
+</nav>
+
+<!-- ===== 메인 콘텐츠 ===== -->
+<main class="max-w-5xl mx-auto px-4 py-8">
+
+  <!-- ── 전체 일정 ── -->
+  <div x-show="activeTab==='overview'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+
+    <h2 class="playfair text-3xl font-bold mb-6 text-ir">전체 일정</h2>
+
+    <!-- 이동 정보 배너 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-white rounded-2xl shadow-sm p-5 border-l-4 border-gray-400">
+        <h3 class="font-bold mb-3 flex items-center gap-2">🚂 로마 → 볼로냐</h3>
+        <div class="grid grid-cols-2 gap-y-1 text-sm">
+          <span class="text-gray-400">교통편</span><span>Frecciarossa / Italo</span>
+          <span class="text-gray-400">소요시간</span><span>약 2시간 10~20분</span>
+          <span class="text-gray-400">출발</span><span>오전 9~10시 권장</span>
+          <span class="text-gray-400">좌석</span><span>1등석 Business 권장</span>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm p-5 border-l-4 border-gray-400">
+        <h3 class="font-bold mb-3 flex items-center gap-2">🚂 볼로냐 → 밀라노</h3>
+        <div class="grid grid-cols-2 gap-y-1 text-sm">
+          <span class="text-gray-400">교통편</span><span>Frecciarossa / Italo</span>
+          <span class="text-gray-400">소요시간</span><span>약 1시간 ~ 1시간 10분</span>
+          <span class="text-gray-400">출발</span><span>오전 9~10시 권장</span>
+          <span class="text-gray-400">좌석</span><span>2등석도 충분 (짧은 구간)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 일정 테이블 -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-ir text-white">
+            <tr>
+              <th class="px-4 py-3 text-left font-medium">날짜</th>
+              <th class="px-4 py-3 text-left font-medium">도시</th>
+              <th class="px-4 py-3 text-left font-medium">주요 일정</th>
+              <th class="px-4 py-3 text-left font-medium hidden md:table-cell">숙소</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="(d,i) in schedule" :key="i">
+              <tr :class="i%2===0?'bg-white':'bg-gray-50/50'" class="border-b border-gray-100 last:border-0">
+                <td class="px-4 py-3 font-medium whitespace-nowrap" x-text="d.date"></td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span
+                    :class="{
+                      'bg-red-100 text-ir': d.city==='로마',
+                      'bg-amber-100 text-amber-900': d.city==='볼로냐',
+                      'bg-blue-100 text-blue-800': d.city==='밀라노',
+                      'bg-gray-100 text-gray-500': d.city==='이동'
+                    }"
+                    class="badge"
+                    x-text="d.city"
+                  ></span>
+                </td>
+                <td class="px-4 py-3 text-gray-700" x-text="d.activities"></td>
+                <td class="px-4 py-3 text-gray-400 text-xs hidden md:table-cell" x-text="d.hotel"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 로마 ── -->
+  <div x-show="activeTab==='rome'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+    <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-3xl p-6 mb-6">
+      <div class="flex items-center gap-4">
+        <span class="text-5xl">🏛️</span>
+        <div>
+          <h2 class="playfair text-3xl font-bold text-ir">로마</h2>
+          <p class="text-gray-600 text-sm">1월 14일(목) ~ 16일(토) · 3박 · Hotel Raphael</p>
+          <p class="text-gray-400 text-xs mt-1">영원의 도시 — 판테온·바티칸·콜로세오</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-5 mb-8">
+      <template x-for="day in romeDays" :key="day.date">
+        <div class="bg-white rounded-2xl shadow-sm day-border-rome p-6">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="bg-ir text-white rounded-full w-11 h-11 flex items-center justify-center font-bold text-sm flex-shrink-0" x-text="day.date"></div>
+            <div>
+              <h3 class="font-bold" x-text="day.theme"></h3>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">오전</p>
+              <div class="bg-amber-50 rounded-xl p-3 h-full">
+                <p class="font-semibold text-sm" x-text="day.morning.icon+' '+day.morning.title"></p>
+                <p class="text-xs text-gray-500 mt-1" x-text="day.morning.desc"></p>
+              </div>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">오후</p>
+              <div class="space-y-2">
+                <template x-for="it in day.afternoon">
+                  <div class="bg-sky-50 rounded-xl p-3">
+                    <p class="font-semibold text-sm" x-text="it.icon+' '+it.title"></p>
+                    <p class="text-xs text-gray-500 mt-1" x-text="it.desc"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">저녁</p>
+              <div class="space-y-2">
+                <template x-for="it in day.evening">
+                  <div class="bg-emerald-50 rounded-xl p-3">
+                    <p class="font-semibold text-sm" x-text="it.icon+' '+it.title"></p>
+                    <p class="text-xs text-gray-500 mt-1" x-text="it.desc"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div x-show="day.memo" class="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-yellow-800">
+            <span class="font-medium">💡 </span><span x-text="day.memo"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <!-- 숙박 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">🏨 숙박 추천</h3>
+        <div class="border-2 border-ir rounded-xl p-4 mb-3">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-bold">Hotel Raphael ★★★★</p>
+            <span class="badge bg-ir text-white">1순위</span>
+          </div>
+          <p class="text-sm text-gray-500">나보나 광장 도보 3분 · 판테온 도보 5분</p>
+          <p class="text-sm text-gray-600 mt-1">아이비 외관 아트 호텔 · 루프탑 로마 전경 조식</p>
+          <p class="text-xs text-ir mt-2 font-medium">1박 약 €250~380</p>
+        </div>
+        <div class="border border-gray-200 rounded-xl p-4">
+          <div class="flex justify-between items-start mb-1">
+            <p class="font-medium text-sm">Hotel Santa Chiara ★★★★</p>
+            <span class="badge bg-gray-100 text-gray-600">대안</span>
+          </div>
+          <p class="text-xs text-gray-500">판테온 도보 1분 · 1838년 창업 가족 경영</p>
+          <p class="text-xs text-gray-400 mt-1">1박 약 €180~260</p>
+        </div>
+      </div>
+      <!-- 맛집 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">🍝 추천 맛집</h3>
+        <div class="space-y-3">
+          <template x-for="r in romeResto" :key="r.name">
+            <div class="flex gap-3 items-start">
+              <span class="text-xl flex-shrink-0" x-text="r.emoji"></span>
+              <div>
+                <p class="font-semibold text-sm" x-text="r.name"></p>
+                <p class="text-xs text-gray-500" x-text="r.desc"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 볼로냐 ── -->
+  <div x-show="activeTab==='bologna'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+    <div class="bg-gradient-to-br from-amber-50 to-red-50 rounded-3xl p-6 mb-6">
+      <div class="flex items-center gap-4">
+        <span class="text-5xl">🏰</span>
+        <div>
+          <h2 class="playfair text-3xl font-bold text-red-900">볼로냐</h2>
+          <p class="text-gray-600 text-sm">1월 17일(일) ~ 19일(화) · 3박 · Art Hotel Novecento</p>
+          <p class="text-gray-400 text-xs mt-1">La Dotta · La Grassa · La Rossa — 학식, 미식, 붉은 지붕의 도시</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-5 text-sm text-amber-800">
+      <strong>🏛️ 볼로냐를 선택한 이유</strong> — 로마-밀라노 정중앙, 1월 관광객 최소, 38km 유네스코 아케이드(Portici)로 추위·비를 피해 도시 전체를 걸을 수 있는 겨울 최적 도시.
+    </div>
+
+    <div class="space-y-5 mb-8">
+      <template x-for="day in bolognaDays" :key="day.date">
+        <div class="bg-white rounded-2xl shadow-sm day-border-bologna p-6">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="text-white rounded-full w-11 h-11 flex items-center justify-center font-bold text-sm flex-shrink-0" style="background:#8b0000;" x-text="day.date"></div>
+            <h3 class="font-bold" x-text="day.theme"></h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">오전</p>
+              <div class="bg-amber-50 rounded-xl p-3 h-full">
+                <p class="font-semibold text-sm" x-text="day.morning.icon+' '+day.morning.title"></p>
+                <p class="text-xs text-gray-500 mt-1" x-text="day.morning.desc"></p>
+              </div>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">오후</p>
+              <div class="space-y-2">
+                <template x-for="it in day.afternoon">
+                  <div class="bg-sky-50 rounded-xl p-3">
+                    <p class="font-semibold text-sm" x-text="it.icon+' '+it.title"></p>
+                    <p class="text-xs text-gray-500 mt-1" x-text="it.desc"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">저녁</p>
+              <div class="space-y-2">
+                <template x-for="it in day.evening">
+                  <div class="bg-emerald-50 rounded-xl p-3">
+                    <p class="font-semibold text-sm" x-text="it.icon+' '+it.title"></p>
+                    <p class="text-xs text-gray-500 mt-1" x-text="it.desc"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div x-show="day.memo" class="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-yellow-800">
+            <span class="font-medium">💡 </span><span x-text="day.memo"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">🏨 숙박 추천</h3>
+        <div class="rounded-xl p-4 mb-3 border-2" style="border-color:#8b0000;">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-bold">Art Hotel Novecento ★★★★</p>
+            <span class="badge text-white" style="background:#8b0000;">1순위</span>
+          </div>
+          <p class="text-sm text-gray-500">마조레 광장 도보 2분 · 아르키진나시오 도보 5분</p>
+          <p class="text-sm text-gray-600 mt-1">1930년대 아르 데코 부티크 · 40실 소규모</p>
+          <p class="text-xs font-medium mt-2" style="color:#8b0000;">1박 약 €160~220</p>
+        </div>
+        <div class="border border-gray-200 rounded-xl p-4">
+          <div class="flex justify-between items-start mb-1">
+            <p class="font-medium text-sm">Grand Hotel Majestic già Baglioni ★★★★★</p>
+            <span class="badge bg-gray-100 text-gray-600">대안</span>
+          </div>
+          <p class="text-xs text-gray-500">18세기 건물 · 마조레 광장 도보 5분 · 최고급</p>
+          <p class="text-xs text-gray-400 mt-1">1박 약 €280~420</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">🍝 추천 맛집</h3>
+        <div class="space-y-3">
+          <template x-for="r in bolognaResto" :key="r.name">
+            <div class="flex gap-3 items-start">
+              <span class="text-xl flex-shrink-0" x-text="r.emoji"></span>
+              <div>
+                <p class="font-semibold text-sm" x-text="r.name"></p>
+                <p class="text-xs text-gray-500" x-text="r.desc"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 밀라노 ── -->
+  <div x-show="activeTab==='milan'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 mb-6">
+      <div class="flex items-center gap-4">
+        <span class="text-5xl">🏙️</span>
+        <div>
+          <h2 class="playfair text-3xl font-bold text-blue-800">밀라노</h2>
+          <p class="text-gray-600 text-sm">1월 20일(수) ~ 22일(금) · 3박 · Portrait Milano</p>
+          <p class="text-gray-400 text-xs mt-1">패션 · 예술 · 고딕 건축의 도시</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-5 text-sm text-red-800">
+      ⚠️ <strong>최후의 만찬</strong>은 수개월 전에 매진됩니다. 항공권 확정 즉시 예매하세요!
+      <a href="https://www.vivaticket.com" target="_blank" class="underline ml-2 text-xs">예매 사이트 →</a>
+    </div>
+
+    <div class="space-y-5 mb-8">
+      <template x-for="day in milanDays" :key="day.date">
+        <div class="bg-white rounded-2xl shadow-sm day-border-milan p-6">
+          <div class="flex items-center gap-3 mb-5">
+            <div class="text-white rounded-full w-11 h-11 flex items-center justify-center font-bold text-sm flex-shrink-0" style="background:#1565c0;" x-text="day.date"></div>
+            <h3 class="font-bold" x-text="day.theme"></h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">오전</p>
+              <div class="bg-amber-50 rounded-xl p-3 h-full">
+                <p class="font-semibold text-sm" x-text="day.morning.icon+' '+day.morning.title"></p>
+                <p class="text-xs text-gray-500 mt-1" x-text="day.morning.desc"></p>
+              </div>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">오후</p>
+              <div class="space-y-2">
+                <template x-for="it in day.afternoon">
+                  <div class="bg-sky-50 rounded-xl p-3">
+                    <p class="font-semibold text-sm" x-text="it.icon+' '+it.title"></p>
+                    <p class="text-xs text-gray-500 mt-1" x-text="it.desc"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-400 uppercase tracking-widest mb-2 font-medium">저녁</p>
+              <div class="space-y-2">
+                <template x-for="it in day.evening">
+                  <div class="bg-emerald-50 rounded-xl p-3">
+                    <p class="font-semibold text-sm" x-text="it.icon+' '+it.title"></p>
+                    <p class="text-xs text-gray-500 mt-1" x-text="it.desc"></p>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div x-show="day.memo" class="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3 text-xs text-yellow-800">
+            <span class="font-medium">💡 </span><span x-text="day.memo"></span>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">🏨 숙박 추천</h3>
+        <div class="border-2 border-blue-700 rounded-xl p-4 mb-3">
+          <div class="flex justify-between items-start mb-2">
+            <p class="font-bold">Portrait Milano ★★★★★</p>
+            <span class="badge bg-blue-700 text-white">1순위</span>
+          </div>
+          <p class="text-sm text-gray-500">브레라 지구 · 두오모 도보 12분</p>
+          <p class="text-sm text-gray-600 mt-1">레지던스형 스위트 (거실+침실 분리)</p>
+          <p class="text-xs text-blue-700 font-medium mt-2">1박 약 €350~520</p>
+        </div>
+        <div class="border border-gray-200 rounded-xl p-4">
+          <div class="flex justify-between items-start mb-1">
+            <p class="font-medium text-sm">Mandarin Oriental Milan ★★★★★</p>
+            <span class="badge bg-gray-100 text-gray-600">대안</span>
+          </div>
+          <p class="text-xs text-gray-500">브레라 지구 내 · 19세기 팔라초 · 스파</p>
+          <p class="text-xs text-gray-400 mt-1">1박 약 €450~650</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">🍝 추천 맛집</h3>
+        <div class="space-y-3">
+          <template x-for="r in milanResto" :key="r.name">
+            <div class="flex gap-3 items-start">
+              <span class="text-xl flex-shrink-0" x-text="r.emoji"></span>
+              <div>
+                <p class="font-semibold text-sm" x-text="r.name"></p>
+                <p class="text-xs text-gray-500" x-text="r.desc"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 예약 체크리스트 ── -->
+  <div x-show="activeTab==='checklist'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="playfair text-3xl font-bold text-ir">예약 체크리스트</h2>
+      <span class="text-sm text-gray-500" x-text="checkedItems.length + ' / ' + totalItems + ' 완료'"></span>
+    </div>
+
+    <!-- 진행률 -->
+    <div class="bg-white rounded-2xl shadow-sm p-5 mb-6">
+      <div class="flex justify-between text-sm mb-2">
+        <span class="font-medium">전체 진행률</span>
+        <span class="text-ir font-bold" x-text="Math.round(checkedItems.length/totalItems*100)+'%'"></span>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-3">
+        <div class="bg-ir h-3 rounded-full transition-all duration-500"
+          :style="'width:'+Math.round(checkedItems.length/totalItems*100)+'%'"></div>
+      </div>
+    </div>
+
+    <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 text-sm text-red-800">
+      ⚠️ <strong>최후의 만찬</strong>은 수개월 전 매진! 항공 확정 직후 최우선 예매하세요.
+    </div>
+
+    <div class="space-y-5">
+      <template x-for="grp in checkGroups" :key="grp.title">
+        <div class="bg-white rounded-2xl shadow-sm p-6">
+          <h3 class="font-bold text-base mb-4" x-text="grp.title"></h3>
+          <div class="space-y-3">
+            <template x-for="item in grp.items" :key="item.id">
+              <label class="flex items-start gap-3 cursor-pointer p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                <input type="checkbox"
+                  x-model="checkedItems"
+                  :value="item.id"
+                  @change="saveChecklist()"
+                  class="mt-0.5 w-5 h-5 rounded accent-ir flex-shrink-0 cursor-pointer">
+                <div :class="checkedItems.includes(item.id)?'opacity-40 line-through':''">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-semibold text-sm" x-text="item.name"></span>
+                    <span x-show="item.priority" class="badge bg-red-100 text-ir" x-text="item.priority"></span>
+                    <span class="badge bg-gray-100 text-gray-600" x-text="item.date"></span>
+                  </div>
+                  <p class="text-xs text-gray-500 mt-0.5" x-text="item.note"></p>
+                </div>
+              </label>
+            </template>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <button @click="resetChecklist()" class="mt-4 text-xs text-gray-400 hover:text-gray-600 underline">
+      체크리스트 초기화
+    </button>
+  </div>
+
+  <!-- ── 예산 & 팁 ── -->
+  <div x-show="activeTab==='budget'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0">
+
+    <h2 class="playfair text-3xl font-bold mb-6 text-ir">예산 & 여행 팁</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+      <!-- 예산 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">💰 항목별 예산 (3인 기준)</h3>
+        <div class="space-y-3">
+          <template x-for="b in budget" :key="b.item">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span x-text="b.emoji"></span>
+                <span class="text-sm" x-text="b.item"></span>
+              </div>
+              <div class="text-right">
+                <span class="font-semibold text-sm text-ir" x-text="b.amount"></span>
+                <p class="text-xs text-gray-400" x-text="b.note"></p>
+              </div>
+            </div>
+          </template>
+          <div class="border-t border-dashed pt-3 flex justify-between font-bold text-lg">
+            <span>총계 (유로)</span>
+            <span class="text-ir">€4,080 ~ 6,170</span>
+          </div>
+          <p class="text-xs text-gray-400">약 640~970만 원 (환율 €1≈₩1,570, 항공료 별도)</p>
+        </div>
+      </div>
+
+      <!-- 팁 -->
+      <div class="bg-white rounded-2xl shadow-sm p-6">
+        <h3 class="font-bold text-lg mb-4">🌡️ 1월 이탈리아 현지 팁</h3>
+        <div class="space-y-4">
+          <template x-for="t in tips" :key="t.title">
+            <div class="flex gap-3">
+              <span class="text-xl flex-shrink-0" x-text="t.emoji"></span>
+              <div>
+                <p class="font-semibold text-sm" x-text="t.title"></p>
+                <p class="text-xs text-gray-500" x-text="t.desc"></p>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+
+    <!-- 이탈리아 식사 에티켓 -->
+    <div class="bg-white rounded-2xl shadow-sm p-6 mb-5">
+      <h3 class="font-bold text-lg mb-4">🍽️ 이탈리아 식사 에티켓</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div class="flex gap-2"><span>⏰</span><span><strong>식사 시간</strong> — 점심 13~15시, 저녁 20시 이후가 현지 시간</span></div>
+        <div class="flex gap-2"><span>💺</span><span><strong>코페르토</strong> — 자리 요금 1인당 €1~3, 계산서에 자동 추가 (정상)</span></div>
+        <div class="flex gap-2"><span>💧</span><span><strong>물 주문</strong> — "naturale(탄산X)" 또는 "frizzante(탄산O)" 선택</span></div>
+        <div class="flex gap-2"><span>☕</span><span><strong>카페 에티켓</strong> — 서서 마시면 절반 가격. "Al banco, per favore"</span></div>
+        <div class="flex gap-2"><span>💶</span><span><strong>팁</strong> — 의무 아님. 만족 시 소액(€2~5) 두고 나오면 충분</span></div>
+        <div class="flex gap-2"><span>🍹</span><span><strong>아페리티보</strong> — 저녁 6~8시 바에서 음료 주문 시 핑거푸드 제공</span></div>
+      </div>
+    </div>
+
+    <!-- 마무리 카드 -->
+    <div class="rounded-3xl p-8 text-white text-center" style="background:linear-gradient(135deg,#c1440e,#8b0000);">
+      <p class="playfair text-3xl font-bold mb-3">Buon Viaggio! 🇮🇹</p>
+      <p class="text-orange-100">딸아이의 의대 입학 전, 마지막 가족여행 — 소중한 추억이 되길 바랍니다.</p>
+      <p class="text-orange-200 text-xs mt-4">Roma · Bologna · Milano · January 2027</p>
+    </div>
+  </div>
+
+</main>
+
+<footer class="bg-gray-800 text-gray-400 text-center py-6 text-xs mt-10">
+  <p>2027년 1월 이탈리아 가족여행 계획서</p>
+  <p class="mt-1">가격·운영시간은 실제 방문 전 공식 사이트에서 재확인 권장 · 생성일: 2026.05.25</p>
+</footer>
+
+<script>
+function app() {
+  return {
+    activeTab: 'overview',
+    checkedItems: [],
+
+    tabs: [
+      { id: 'overview', label: '📋 전체 일정' },
+      { id: 'rome',     label: '🏛️ 로마' },
+      { id: 'bologna',  label: '🏰 볼로냐' },
+      { id: 'milan',    label: '🏙️ 밀라노' },
+      { id: 'checklist',label: '✅ 예약 체크' },
+      { id: 'budget',   label: '💰 예산 & 팁' },
+    ],
+
+    schedule: [
+      { date:'1/13(수)', city:'이동',   activities:'인천 출발 → 로마 비행',                                    hotel:'—' },
+      { date:'1/14(목)', city:'로마',   activities:'판테온 · 나보나 광장 · 트레비 분수 야경 (도착 적응일)',        hotel:'Hotel Raphael' },
+      { date:'1/15(금)', city:'로마',   activities:'바티칸 박물관 + 시스티나 예배당 · 성 베드로 대성당',          hotel:'Hotel Raphael' },
+      { date:'1/16(토)', city:'로마',   activities:'콜로세오 · 포로 로마노 · 몬티 지구',                         hotel:'Hotel Raphael' },
+      { date:'1/17(일)', city:'볼로냐', activities:'로마→볼로냐 이동 · 마조레 광장 · 산 페트로니오 대성당',       hotel:'Art Hotel Novecento' },
+      { date:'1/18(월)', city:'볼로냐', activities:'아르키진나시오 (옛 대학) · 산토 스테파노 일곱 성당',          hotel:'Art Hotel Novecento' },
+      { date:'1/19(화)', city:'볼로냐', activities:'산 루카 성당 포르티코 · 콰드릴라테로 미식 투어',             hotel:'Art Hotel Novecento' },
+      { date:'1/20(수)', city:'밀라노', activities:'볼로냐→밀라노 이동 · 두오모 · 비토리오 에마누엘레 갤러리아', hotel:'Portrait Milano' },
+      { date:'1/21(목)', city:'밀라노', activities:'최후의 만찬 (다 빈치) · 스포르체스코 성 · 셈피오네 공원',   hotel:'Portrait Milano' },
+      { date:'1/22(금)', city:'밀라노', activities:'브레라 미술관 · 브레라 지구 · 나빌리 운하 아페리티보',       hotel:'Portrait Milano' },
+      { date:'1/23(토)', city:'밀라노', activities:'마지막 여유 · 겨울 세일(Saldi) · 귀국 짐 정리',             hotel:'(체크아웃)' },
+      { date:'1/24(일)', city:'이동',   activities:'말펜사 공항(MXP) → 인천 출발',                              hotel:'—' },
+    ],
+
+    romeDays: [
+      {
+        date:'1/14',
+        theme:'도착 적응일',
+        morning:{ icon:'☕', title:"Sant'Eustachio il Caffè", desc:'로마 3대 커피 명소, 1938년 창업. 판테온 도보 2분.' },
+        afternoon:[
+          { icon:'🏛️', title:'판테온', desc:'실내 최고 로마 건축. 사전 예약 권장 (~€5).' },
+          { icon:'⛲', title:'나보나 광장', desc:'베르니니 4대 강 분수. 도보 5분.' }
+        ],
+        evening:[
+          { icon:'🌙', title:'트레비 분수 야경', desc:'낮보다 한가. 야간 조명 아름다움.' },
+          { icon:'🍷', title:'Tonnarello', desc:'아마트리치아나·살팀보카. 1922년 창업 트라스테베레 트라토리아.' }
+        ],
+        memo:'첫날은 시차 적응 우선. 판테온·나보나·트레비 모두 도보 10~15분 내 인접.'
+      },
+      {
+        date:'1/15',
+        theme:'바티칸 Day',
+        morning:{ icon:'🎨', title:'바티칸 박물관 + 시스티나 예배당', desc:'09:00 슬롯 반드시 사전 예약. 미켈란젤로 천장화.' },
+        afternoon:[
+          { icon:'⛪', title:'성 베드로 대성당', desc:'무료. 피에타·베르니니 발다키노. 쿠폴라 전망 선택.' },
+          { icon:'🏰', title:'산탄젤로 성 강변 산책', desc:'테베레 강변 야경 산책.' }
+        ],
+        evening:[
+          { icon:'🍕', title:'Pizzarium Bonci', desc:'로마 최고 피자 알 탈리오.' },
+          { icon:'🍦', title:'Gelateria dei Gracchi', desc:'피스타치오·헤이즐넛 젤라토.' }
+        ],
+        memo:'바티칸 박물관 사전 예약 필수. 어깨·무릎 가리는 복장 필수.'
+      },
+      {
+        date:'1/16',
+        theme:'고대 로마 Day',
+        morning:{ icon:'🏟️', title:'콜로세오', desc:'09:00 시간 지정 예약 필수. 통합권 €18.' },
+        afternoon:[
+          { icon:'🏺', title:'포로 로마노 + 팔라티노 언덕', desc:'통합권 포함. 고대 로마 정치 중심지 산책.' },
+          { icon:'🛍️', title:'몬티 지구', desc:'감각적 골목·카페. 딸과 함께 즐기기 좋음.' }
+        ],
+        evening:[
+          { icon:'🍝', title:'Roma Sparita', desc:'카초 에 페페 인 카치오 — 치즈 그릇 시그니처 요리. 예약 필수.' }
+        ],
+        memo:'토요일 오전 일찍 입장 권장. 방수 신발 필수. Roma Sparita 예약 필수.'
+      }
+    ],
+
+    bolognaDays: [
+      {
+        date:'1/17',
+        theme:'볼로냐 도착 & 구시가',
+        morning:{ icon:'🚂', title:'로마 → 볼로냐 이동', desc:'Frecciarossa, 약 2시간 10분. 오전 9~10시 출발 권장.' },
+        afternoon:[
+          { icon:'⛪', title:'마조레 광장 + 산 페트로니오 대성당', desc:'유네스코 아케이드 아래 산책.' },
+          { icon:'🗼', title:'레 두에 토리 (두 탑)', desc:'중세 탑 외관. 아솔리네 탑 등반은 선택(498계단).' }
+        ],
+        evening:[
+          { icon:'🍝', title:"Osteria dell'Orsa", desc:'탈리아텔레 알 라구 €10. 대학가 가성비 단골.' }
+        ],
+        memo:'도착 후 호텔 짐 보관 후 도보 관광 시작. 일요일 일부 상점 닫지만 성당·광장 개방.'
+      },
+      {
+        date:'1/18',
+        theme:'학문의 도시',
+        morning:{ icon:'🏛️', title:'아르키진나시오 (옛 볼로냐 대학)', desc:'목조 해부학 강의실 압권. 실내. 소액 입장료.' },
+        afternoon:[
+          { icon:'⛪', title:'산토 스테파노 일곱 성당', desc:'중세 미로 같은 성당 군집. 조용하고 영적. 실내.' },
+          { icon:'🎓', title:'볼로냐 대학가 (Via Zamboni)', desc:'카페·젤라토 산책. 딸과 함께.' }
+        ],
+        evening:[
+          { icon:'🍝', title:'Trattoria Anna Maria', desc:'볼로냐 최고 라구 파스타 명소. 수주 전 예약 필수.' }
+        ],
+        memo:'아르키진나시오 월요일 개관 여부 사전 확인 필요. Anna Maria 수주 전 예약 필수.'
+      },
+      {
+        date:'1/19',
+        theme:'전망 & 미식 투어',
+        morning:{ icon:'⛪', title:'산 루카 성모 성당 (포르티코)', desc:'세계 최장 아케이드(3.8km, 666아치). 미니트레인 권장.' },
+        afternoon:[
+          { icon:'🧀', title:'콰드릴라테로 미식 탐방', desc:'모르타델라·파르미지아노·발사믹 시식. 기념품 쇼핑.' },
+          { icon:'🍦', title:'Cremeria Funivia', desc:'볼로냐 최고 젤라토. 피스타치오·살토.' }
+        ],
+        evening:[
+          { icon:'🍲', title:'Osteria Bottega', desc:'토르텔리니 인 브로도 — 1월 겨울 완벽 메뉴. 예약 필수.' }
+        ],
+        memo:'산 루카 도보 전체(1시간 오르막)는 체력 고려. 미니트레인/버스 권장. Osteria Bottega 예약 필수.'
+      }
+    ],
+
+    milanDays: [
+      {
+        date:'1/20',
+        theme:'밀라노 도착 & 두오모',
+        morning:{ icon:'🚂', title:'볼로냐 → 밀라노 이동', desc:'약 1시간. 오전 9~10시 출발 권장.' },
+        afternoon:[
+          { icon:'🏛️', title:'두오모 내부 + 테라스 (옥상)', desc:'유럽 최대급 고딕 성당. 첨탑 숲 산책. 시간 지정 예약.' },
+          { icon:'🏬', title:'비토리오 에마누엘레 2세 갤러리아', desc:'1877년 유리 돔 아케이드. 실내. 무료.' }
+        ],
+        evening:[
+          { icon:'🚶', title:'스칼라 광장 산책', desc:'' },
+          { icon:'🦑', title:'Pescheria da Claudio', desc:'해산물 파스타·카르파초.' }
+        ],
+        memo:'두오모 테라스는 야외라 방한 필수. 밀라노 중앙역 도착 시 소매치기 주의.'
+      },
+      {
+        date:'1/21',
+        theme:'최후의 만찬 & 스포르체스코',
+        morning:{ icon:'🖼️', title:'「최후의 만찬」(다 빈치)', desc:'15분 입장, 수개월 전 예약 필수! 이 여행의 최우선 예약 항목.' },
+        afternoon:[
+          { icon:'🏰', title:'스포르체스코 성', desc:'미켈란젤로 「론다니니 피에타」 실내 관람.' },
+          { icon:'🌳', title:'셈피오네 공원 + 평화의 문', desc:'가벼운 산책.' }
+        ],
+        evening:[
+          { icon:'🍚', title:'Ratanà', desc:'밀라노 최고 리조또 알라 밀라네제. 수주 전 예약 필수.' }
+        ],
+        memo:'최후의 만찬 입장 15분 전 도착 필수. 스포르체스코 성 안뜰·공원 무료.'
+      },
+      {
+        date:'1/22',
+        theme:'브레라 예술 & 나빌리 운하',
+        morning:{ icon:'🎨', title:'브레라 미술관', desc:'라파엘로·카라바조·만테냐. 실내. 조용하고 격조 높음.' },
+        afternoon:[
+          { icon:'🛍️', title:'브레라 지구 산책', desc:'갤러리·감각적 카페. 딸과 함께.' },
+          { icon:'🖼️', title:'암브로시아나 미술관 (선택)', desc:'레오나르도 「음악가의 초상」.' }
+        ],
+        evening:[
+          { icon:'🍹', title:'El Brellin 아페리티보', desc:'나빌리 운하변. 아페롤 스프리츠+핑거푸드. 금요일 분위기 최고.' },
+          { icon:'🥩', title:'Masuelli San Marco', desc:'오소부코·홈메이드 돌체. 1921년 창업. 밀라노 마지막 만찬.' }
+        ],
+        memo:'브레라 미술관 온라인 예약 권장. 나빌리 저녁 소지품 주의. Masuelli 금요일 예약 필수.'
+      }
+    ],
+
+    romeResto: [
+      { emoji:'☕', name:"Sant'Eustachio il Caffè", desc:'로마 3대 커피, 1938년. 판테온 도보 2분.' },
+      { emoji:'🍝', name:'Tonnarello', desc:'아마트리치아나·살팀보카. 1922년 창업 트라스테베레.' },
+      { emoji:'🍽️', name:"Osteria dell'Angelo", desc:'현지인 숨은 명소, Prati 지구. 소고기 볼리토.' },
+      { emoji:'⭐', name:'Roma Sparita', desc:'카초 에 페페 인 카치오. 치즈 그릇 시그니처. 예약 필수.' },
+      { emoji:'🍕', name:'Pizzarium Bonci', desc:'로마 최고 피자 알 탈리오.' },
+      { emoji:'🍦', name:'Fatamorgana', desc:'비건 젤라토, 독창적 맛. 스페인 광장 근처.' },
+    ],
+
+    bolognaResto: [
+      { emoji:'☕', name:'Caffè Terzi', desc:'볼로냐 현지인 모닝 커피 성지. 스페셜티 커피.' },
+      { emoji:'🍝', name:'Trattoria del Rosso', desc:'1904년 창업. 탈리아텔레 알 라구 정통 맛.' },
+      { emoji:'🍽️', name:"Osteria dell'Orsa", desc:'대학가 가성비 단골. 탈리아텔레 €10.' },
+      { emoji:'🧀', name:'Tamburini', desc:'1932년 창업 살루메리아. 모르타델라 피아디나.' },
+      { emoji:'⭐', name:'Trattoria Anna Maria', desc:'볼로냐 최고 라구. 수주 전 예약 필수.' },
+      { emoji:'🍲', name:'Osteria Bottega', desc:'슬로우푸드 인증. 토르텔리니 인 브로도.' },
+      { emoji:'🍦', name:'Cremeria Funivia', desc:'볼로냐 최고 젤라토. 피스타치오·살토.' },
+    ],
+
+    milanResto: [
+      { emoji:'☕', name:'Pasticceria Marchesi', desc:'1824년 창업 밀라노 전통 파스티체리아.' },
+      { emoji:'🍚', name:'Trattoria Milanese', desc:'1933년 창업. 리조또 알라 밀라네제·오소부코.' },
+      { emoji:'⭐', name:'Ratanà', desc:'밀라노 최고 리조또. 미슐랭 추천. 예약 필수.' },
+      { emoji:'🥩', name:'Masuelli San Marco', desc:'1921년 창업. 오소부코. 밀라노 마지막 밤.' },
+      { emoji:'🍹', name:'El Brellin', desc:'나빌리 운하변 아페리티보. 금요일 저녁 최고.' },
+      { emoji:'🍦', name:'Gelato Giusto', desc:'밀라노 최고 젤라토. 브레라 근처.' },
+    ],
+
+    checkGroups: [
+      {
+        title: '⭐ 명소 예약 (필수)',
+        items: [
+          { id:'last-supper', name:'최후의 만찬 (산타 마리아 델레 그라치에)', priority:'최우선!!!', date:'1/21', note:'수개월 전 매진. 항공 확정 즉시 예매!' },
+          { id:'vatican',     name:'바티칸 박물관 + 시스티나 예배당',           priority:'★★',    date:'1/15 오전 9시', note:'개장 슬롯 예약 필수.' },
+          { id:'colosseum',   name:'콜로세오 + 포로 로마노 + 팔라티노 통합권',  priority:'★★',    date:'1/16 오전 9시', note:'시간 지정 필수. 약 €18.' },
+          { id:'duomo-milan', name:'밀라노 두오모 + 테라스',                   priority:'★',     date:'1/20 오후',     note:'시간 지정 예약 권장.' },
+          { id:'pantheon',    name:'판테온',                                   priority:'★',     date:'1/14 오후',     note:'유료(~€5) + 시간 예약 권장.' },
+          { id:'brera',       name:'브레라 미술관',                             priority:'',      date:'1/22 오전',     note:'온라인 예약 권장.' },
+        ]
+      },
+      {
+        title: '🚂 기차 예약',
+        items: [
+          { id:'train-rb', name:'로마 → 볼로냐 (고속철)', priority:'', date:'1/17 오전', note:'trenitalia.com / italotreno.it. 1~2개월 전 조기 예약 할인.' },
+          { id:'train-bm', name:'볼로냐 → 밀라노 (고속철)', priority:'', date:'1/20 오전', note:'1시간 구간. 2등석도 충분.' },
+        ]
+      },
+      {
+        title: '🏨 숙소 예약',
+        items: [
+          { id:'hotel-rome',    name:'Hotel Raphael (로마)',           priority:'', date:'1/14~16 3박', note:'raphaelhotelrome.com · 3인 패밀리룸 확인' },
+          { id:'hotel-bologna', name:'Art Hotel Novecento (볼로냐)',   priority:'', date:'1/17~19 3박', note:'art-hotel-novecento.com' },
+          { id:'hotel-milan',   name:'Portrait Milano (밀라노)',       priority:'', date:'1/20~22 3박', note:'lungarnocollection.com' },
+        ]
+      },
+      {
+        title: '🍽️ 레스토랑 예약',
+        items: [
+          { id:'r-anna-maria', name:'Trattoria Anna Maria (볼로냐)',  priority:'★', date:'1/18 저녁', note:'+39 051 266894 · 수주 전 필수' },
+          { id:'r-bottega',    name:'Osteria Bottega (볼로냐)',       priority:'★', date:'1/19 저녁', note:'+39 051 585111' },
+          { id:'r-milanese',   name:'Trattoria Milanese (밀라노)',    priority:'★', date:'1/20 점심', note:'+39 02 8645 1991' },
+          { id:'r-ratana',     name:'Ratanà (밀라노)',                priority:'★', date:'1/21 저녁', note:'온라인 예약 · 수주 전 필수' },
+          { id:'r-masuelli',   name:'Masuelli San Marco (밀라노)',    priority:'★', date:'1/22 저녁', note:'금요일 예약 필수' },
+          { id:'r-sparita',    name:'Roma Sparita (로마)',            priority:'',  date:'1/16 저녁', note:'+39 06 580 0757' },
+          { id:'r-tonnarello', name:'Tonnarello (로마)',              priority:'',  date:'1/14 저녁', note:'+39 06 589 5728' },
+        ]
+      },
+      {
+        title: '✈️ 귀국 준비',
+        items: [
+          { id:'airport-mxp',   name:'말펜사 공항(MXP) 이동 방법 확인', priority:'', date:'1/24', note:'말펜사 익스프레스(~1시간) 또는 택시(~€110)' },
+          { id:'tax-refund',    name:'택스 리펀드 영수증 정리',          priority:'', date:'1/23', note:'€154.95 이상 구매 시 VAT 환급. 공항 커스텀 도장 필요.' },
+          { id:'airport-early', name:'공항 3시간 30분 전 도착',          priority:'', date:'1/24', note:'택스 리펀드 줄 포함. MXP 코드 항공권에서 확인 필수.' },
+        ]
+      },
+    ],
+
+    budget: [
+      { emoji:'🏨', item:'숙박 9박',      amount:'€2,300~3,400', note:'1순위 숙소 기준' },
+      { emoji:'🍝', item:'식사 10일',      amount:'€1,200~1,800', note:'점심+저녁 추천 식당' },
+      { emoji:'🏛️', item:'명소 입장료',   amount:'€150~200',     note:'최후의 만찬·바티칸·콜로세오 등' },
+      { emoji:'🚂', item:'기차 2회',       amount:'€80~150',      note:'1등석, 조기 예약 할인 가능' },
+      { emoji:'✈️', item:'공항 이동',      amount:'€50~120',      note:'말펜사 택시 기준' },
+      { emoji:'🛍️', item:'간식·쇼핑·기타', amount:'€300~500',     note:'1월 Saldi 세일 시즌' },
+    ],
+
+    tips: [
+      { emoji:'🧥', title:'날씨 대비',       desc:'최저 4°C~최고 12°C, 비 잦음. 방수 신발·경량 패딩+두꺼운 코트·우산 필수.' },
+      { emoji:'😊', title:'비수기의 축복',   desc:'1월은 관광객 최소. 줄 없이 명소 여유롭게 감상 가능. 가족 성향에 최적.' },
+      { emoji:'🛍️', title:'겨울 세일 Saldi', desc:'1월 초~2월 전국 세일. 백화점·아울렛 20~50% 할인.' },
+      { emoji:'👜', title:'치안 주의',        desc:'로마 테르미니역·밀라노 중앙역 소매치기 주의. 가방 항상 앞으로.' },
+      { emoji:'📄', title:'여권 사본',        desc:'각자 소지. 원본과 분리 보관. 택스 리펀드 영수증도 따로 관리.' },
+      { emoji:'📱', title:'이탈리아 SIM',    desc:'출발 전 이심(eSIM) 또는 현지 SIM 준비. 데이터 로밍 비용 절감.' },
+    ],
+
+    get totalItems() {
+      return this.checkGroups.reduce((s, g) => s + g.items.length, 0);
+    },
+
+    init() {
+      const saved = localStorage.getItem('italy-2027-checklist');
+      if (saved) this.checkedItems = JSON.parse(saved);
+    },
+
+    saveChecklist() {
+      localStorage.setItem('italy-2027-checklist', JSON.stringify(this.checkedItems));
+    },
+
+    resetChecklist() {
+      if (confirm('체크리스트를 초기화할까요?')) {
+        this.checkedItems = [];
+        localStorage.removeItem('italy-2027-checklist');
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>

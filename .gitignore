@@ -1,0 +1,6 @@
+# 개인 설정 (GitHub에 올리지 않음)
+.claude/
+_workspace/
+
+# macOS
+.DS_Store
