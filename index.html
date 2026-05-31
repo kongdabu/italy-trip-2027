@@ -33,13 +33,6 @@
     .day-border-rome   { border-left: 4px solid #c1440e; }
     .day-border-bologna{ border-left: 4px solid #8b0000; }
     .day-border-milan  { border-left: 4px solid #1565c0; }
-    .tab-btn { @apply flex-shrink-0 px-4 py-3 text-sm font-medium transition-all duration-200 whitespace-nowrap border-b-2 border-transparent; }
-    .tab-active-rome    { @apply border-ir text-ir bg-red-50; }
-    .tab-active-bologna { @apply border-red-900 text-red-900 bg-red-50; }
-    .tab-active-milan   { @apply border-blue-700 text-blue-700 bg-blue-50; }
-    .tab-active-default { @apply border-ir text-ir bg-orange-50; }
-    .section-card { @apply bg-white rounded-2xl shadow-sm p-6 mb-4; }
-    .badge { @apply text-xs px-2 py-0.5 rounded-full font-medium; }
   </style>
 </head>
 <body x-data="app()" x-init="init()">
@@ -91,8 +84,8 @@
     <template x-for="t in tabs" :key="t.id">
       <button
         @click="activeTab = t.id"
-        :class="activeTab === t.id ? 'tab-active-default font-semibold' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'"
-        class="tab-btn"
+        :class="activeTab === t.id ? 'border-ir text-ir bg-orange-50 font-semibold' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'"
+        class="flex-shrink-0 px-4 py-3 text-sm font-medium transition-all duration-200 whitespace-nowrap border-b-2 border-transparent"
         x-text="t.label"
       ></button>
     </template>
@@ -153,7 +146,7 @@
                       'bg-blue-100 text-blue-800': d.city==='밀라노',
                       'bg-gray-100 text-gray-500': d.city==='이동'
                     }"
-                    class="badge"
+                    class="text-xs px-2 py-0.5 rounded-full font-medium"
                     x-text="d.city"
                   ></span>
                 </td>
@@ -234,7 +227,7 @@
         <div class="border-2 border-ir rounded-xl p-4 mb-3">
           <div class="flex justify-between items-start mb-2">
             <p class="font-bold">Hotel Raphael ★★★★</p>
-            <span class="badge bg-ir text-white">1순위</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-ir text-white">1순위</span>
           </div>
           <p class="text-sm text-gray-500">나보나 광장 도보 3분 · 판테온 도보 5분</p>
           <p class="text-sm text-gray-600 mt-1">아이비 외관 아트 호텔 · 루프탑 로마 전경 조식</p>
@@ -243,7 +236,7 @@
         <div class="border border-gray-200 rounded-xl p-4">
           <div class="flex justify-between items-start mb-1">
             <p class="font-medium text-sm">Hotel Santa Chiara ★★★★</p>
-            <span class="badge bg-gray-100 text-gray-600">대안</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">대안</span>
           </div>
           <p class="text-xs text-gray-500">판테온 도보 1분 · 1838년 창업 가족 경영</p>
           <p class="text-xs text-gray-400 mt-1">1박 약 €180~260</p>
@@ -335,7 +328,7 @@
         <div class="rounded-xl p-4 mb-3 border-2" style="border-color:#8b0000;">
           <div class="flex justify-between items-start mb-2">
             <p class="font-bold">Art Hotel Novecento ★★★★</p>
-            <span class="badge text-white" style="background:#8b0000;">1순위</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium text-white" style="background:#8b0000;">1순위</span>
           </div>
           <p class="text-sm text-gray-500">마조레 광장 도보 2분 · 아르키진나시오 도보 5분</p>
           <p class="text-sm text-gray-600 mt-1">1930년대 아르 데코 부티크 · 40실 소규모</p>
@@ -344,7 +337,7 @@
         <div class="border border-gray-200 rounded-xl p-4">
           <div class="flex justify-between items-start mb-1">
             <p class="font-medium text-sm">Grand Hotel Majestic già Baglioni ★★★★★</p>
-            <span class="badge bg-gray-100 text-gray-600">대안</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">대안</span>
           </div>
           <p class="text-xs text-gray-500">18세기 건물 · 마조레 광장 도보 5분 · 최고급</p>
           <p class="text-xs text-gray-400 mt-1">1박 약 €280~420</p>
@@ -436,7 +429,7 @@
         <div class="border-2 border-blue-700 rounded-xl p-4 mb-3">
           <div class="flex justify-between items-start mb-2">
             <p class="font-bold">Portrait Milano ★★★★★</p>
-            <span class="badge bg-blue-700 text-white">1순위</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-700 text-white">1순위</span>
           </div>
           <p class="text-sm text-gray-500">브레라 지구 · 두오모 도보 12분</p>
           <p class="text-sm text-gray-600 mt-1">레지던스형 스위트 (거실+침실 분리)</p>
@@ -445,7 +438,7 @@
         <div class="border border-gray-200 rounded-xl p-4">
           <div class="flex justify-between items-start mb-1">
             <p class="font-medium text-sm">Mandarin Oriental Milan ★★★★★</p>
-            <span class="badge bg-gray-100 text-gray-600">대안</span>
+            <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600">대안</span>
           </div>
           <p class="text-xs text-gray-500">브레라 지구 내 · 19세기 팔라초 · 스파</p>
           <p class="text-xs text-gray-400 mt-1">1박 약 €450~650</p>
@@ -507,8 +500,8 @@
                 <div :class="checkedItems.includes(item.id)?'opacity-40 line-through':''">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="font-semibold text-sm" x-text="item.name"></span>
-                    <span x-show="item.priority" class="badge bg-red-100 text-ir" x-text="item.priority"></span>
-                    <span class="badge bg-gray-100 text-gray-600" x-text="item.date"></span>
+                    <span x-show="item.priority" class="text-xs px-2 py-0.5 rounded-full font-medium bg-red-100 text-ir" x-text="item.priority"></span>
+                    <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-600" x-text="item.date"></span>
                   </div>
                   <p class="text-xs text-gray-500 mt-0.5" x-text="item.note"></p>
                 </div>

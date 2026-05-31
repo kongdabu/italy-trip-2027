@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>보유 주식 포트폴리오 분석 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    /* 다크 친화 테마 + 반응형 */
+    :root { --bg:#0f1115; --card:#1a1d24; --txt:#e6e8eb; --sub:#9aa0a6;
+            --up:#e03131; --down:#1c7ed6; --line:#2a2e37; --accent:#3b5bdb; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { background:var(--bg); color:var(--txt);
+           font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+           line-height:1.55; padding:16px; }
+    .wrap { max-width:1140px; margin:0 auto; }
+    h1 { font-size:1.45rem; margin-bottom:4px; }
+    h3 { font-size:1rem; margin-bottom:10px; color:var(--txt); }
+    .muted { color:var(--sub); font-size:.85rem; }
+    .warn { background:#2a210a; border:1px solid #6b5311; color:#ffd43b;
+            padding:10px 14px; border-radius:10px; font-size:.82rem; margin:12px 0; }
+    .grid { display:grid; gap:12px; }
+    .cards { grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); margin-top:14px; }
+    .charts { grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); margin-top:16px; }
+    .card { background:var(--card); border:1px solid var(--line);
+            border-radius:14px; padding:16px; }
+    .kpi-label { color:var(--sub); font-size:.8rem; margin-bottom:6px; }
+    .kpi { font-size:1.45rem; font-weight:700; }
+    .kpi-sub { font-size:.82rem; margin-top:4px; }
+    .up { color:var(--up); } .down { color:var(--down); }
+    .tabs { display:flex; gap:8px; flex-wrap:wrap; margin:22px 0 14px; }
+    .tab { padding:8px 16px; border-radius:999px; background:var(--card);
+           border:1px solid var(--line); cursor:pointer; font-size:.9rem; color:var(--txt); }
+    .tab.active { background:var(--accent); border-color:var(--accent); font-weight:600; }
+    .acct-summary { display:flex; gap:18px; flex-wrap:wrap; margin-bottom:6px; font-size:.9rem; }
+    .acct-note { color:var(--sub); font-size:.85rem; margin:8px 0 16px; }
+    .holding { margin-bottom:12px; }
+    .h-head { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:6px; }
+    .h-name { font-size:1.02rem; font-weight:600; }
+    .h-meta { color:var(--sub); font-size:.78rem; }
+    .h-pnl { font-size:1rem; font-weight:700; text-align:right; }
+    .h-body { display:grid; grid-template-columns:1.4fr 1fr; gap:14px; margin-top:10px; align-items:center; }
+    @media(max-width:640px){ .h-body{ grid-template-columns:1fr; } }
+    .row { display:flex; justify-content:space-between; font-size:.82rem; padding:3px 0;
+           border-bottom:1px dashed var(--line); }
+    .opinion { display:inline-block; font-size:.74rem; padding:2px 9px; border-radius:6px;
+               background:#1f2733; border:1px solid var(--line); margin-left:6px; }
+    .op-buy{ color:#69db7c; } .op-cut{ color:#ffa94d; } .op-sell{ color:#ff8787; } .op-hold{ color:#74c0fc; }
+    .comment { font-size:.82rem; color:#c3c8ce; margin-top:8px; }
+    .badge { display:inline-block; font-size:.7rem; padding:2px 8px; border-radius:6px;
+             background:#332701; color:#ffd43b; margin:2px 4px 0 0; }
+    .radar-wrap { max-width:230px; margin:0 auto; }
+    canvas { max-height:300px; }
+    table { width:100%; border-collapse:collapse; font-size:.82rem; margin-top:6px; }
+    th,td { padding:7px 8px; border-bottom:1px solid var(--line); text-align:right; }
+    th:first-child,td:first-child { text-align:left; }
+    footer { margin-top:34px; color:var(--sub); font-size:.78rem;
+             border-top:1px solid var(--line); padding-top:16px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📊 보유 주식 포트폴리오 분석 대시보드</h1>
+    <p class="muted" id="asOf"></p>
+    <div class="warn" id="caution"></div>
+
+    <!-- 종합 KPI -->
+    <section class="grid cards" id="kpis"></section>
+
+    <!-- 분산 차트 -->
+    <section class="grid charts">
+      <div class="card"><h3>자산군 분산</h3><canvas id="assetChart"></canvas></div>
+      <div class="card"><h3>지역 분산</h3><canvas id="regionChart"></canvas></div>
+      <div class="card"><h3>섹터 분산</h3><canvas id="sectorChart"></canvas></div>
+    </section>
+
+    <!-- 리스크 / 액션 -->
+    <section class="grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-top:16px">
+      <div class="card"><h3>⚠️ 핵심 리스크</h3><ul id="risks" style="padding-left:18px;font-size:.85rem"></ul></div>
+      <div class="card"><h3>✅ 우선 액션</h3><ul id="actions" style="padding-left:18px;font-size:.85rem"></ul></div>
+    </section>
+
+    <!-- 계좌별 손익 -->
+    <section class="card" style="margin-top:16px"><h3>계좌별 평가손익</h3><canvas id="acctChart" style="max-height:240px"></canvas></section>
+
+    <!-- 계좌 탭 -->
+    <div class="tabs" id="tabs"></div>
+    <section id="accountView"></section>
+
+    <footer>
+      ⚠️ 본 대시보드는 공개 웹 정보 기반의 <b>투자 참고용 분석 자료</b>이며, 현재가·평가손익은 수집 시점·소스에 따라 실제와 다를 수 있는 참고치입니다.
+      투자 판단과 그 결과에 대한 책임은 투자자 본인에게 있습니다. 과거 성과는 미래 수익을 보장하지 않습니다.
+      <div id="genStamp" style="margin-top:8px"></div>
+    </footer>
+  </div>
+
+  <script>
+    // report-writer가 생성한 구조화 데이터(portfolio_data.json)를 인라인 임베드
+    const DATA = {
+  "meta": {
+    "asOf": "2026-05-31",
+    "currency": "KRW",
+    "perspectives": ["펀더멘털", "기술적", "산업섹터", "거시", "시장심리"],
+    "dataCaution": "재분석본(현재가 갱신). 현재가는 웹 조회 기반이며 종목별 수집 시점·소스 편차가 있어 평가손익은 참고치입니다. TIGER 2차전지테마(305540)는 복수 소스로 ~27,000원 재확인(직전 잠정 18,900 정정). 투자 판단 전 실시간 시세로 재확인하세요."
+  },
+  "summary": {
+    "totalBuy": 95990005,
+    "totalValue": 103469970,
+    "totalPnl": 7479965,
+    "totalPnlPct": 7.79,
+    "topRisks": [
+      "반도체/AI 단일테마 과집중 — 반도체 약 24% + 미국기술주 약 28%가 동일 AI 드라이버로 동조, SK하이닉스 실질 익스포저 과대",
+      "주식 약 95% 편중·현금성 0% — 증시 조정 시 변동성 버퍼 부재",
+      "달러 환노출 과중(美 자산 6건, 원/달러 ~1,550) — 시나리오 B(인하·원강세) 진행 시 환차익→환차손 역전 리스크",
+      "레버리지(SK하이닉스 ±2배)·인버스(2차전지 -73%)·이벤트 급등(삼성SDS +125%) 등 고변동 노출"
+    ],
+    "topActions": [
+      "반도체 과집중 완화 — KODEX SK하이닉스단일종목레버리지(ISA) 우선 축소, SK하이닉스·삼성SDS 급등분 차익 분할",
+      "중복 ETF 통합 — 나스닥100 3종/S&P500 2종/고배당 2종을 계좌별 1종으로 정리",
+      "RISE 2차전지TOP10인버스 정리 검토 — 2차전지 반등(테마 -3.9%로 회복)과 역방향, -73% 손실",
+      "달러 환노출 점검 — 환차익 일부 이익실현, 신규 美자산은 환헤지형 분할 검토"
+    ]
+  },
+  "allocation": {
+    "byAssetClass": [
+      { "name": "주식", "value": 98470940, "pct": 95.2 },
+      { "name": "금", "value": 3300550, "pct": 3.2 },
+      { "name": "채권", "value": 1698480, "pct": 1.6 }
+    ],
+    "byRegion": [
+      { "name": "국내", "value": 69123325, "pct": 66.8 },
+      { "name": "미국", "value": 30283710, "pct": 29.3 },
+      { "name": "금", "value": 3300550, "pct": 3.2 },
+      { "name": "일본", "value": 762385, "pct": 0.7 }
+    ],
+    "bySector": [
+      { "name": "미국주식(S&P500·나스닥)", "value": 28585230, "pct": 27.6 },
+      { "name": "반도체", "value": 25091600, "pct": 24.2 },
+      { "name": "고배당", "value": 16000185, "pct": 15.5 },
+      { "name": "2차전지(롱)", "value": 13500000, "pct": 13.0 },
+      { "name": "IT서비스/AX", "value": 4784000, "pct": 4.6 },
+      { "name": "바이오", "value": 4562500, "pct": 4.4 },
+      { "name": "국내대형(KOSPI200)", "value": 4599840, "pct": 4.4 },
+      { "name": "금", "value": 3300550, "pct": 3.2 },
+      { "name": "채권", "value": 1698480, "pct": 1.6 },
+      { "name": "일본", "value": 762385, "pct": 0.7 },
+      { "name": "2차전지(인버스)", "value": 540000, "pct": 0.5 },
+      { "name": "AI신규상장", "value": 45200, "pct": 0.04 }
+    ]
+  },
+  "accounts": [
+    {
+      "name": "일반계좌",
+      "buy": 32524282,
+      "value": 35521500,
+      "pnl": 2997218,
+      "pnlPct": 9.22,
+      "note": "매매 자유·일반과세. 직전(-9.7%)에서 +9.2%로 흑자 전환 — TIGER 2차전지테마 현재가 정정(-33%→-3.9%)과 삼성SDS 급등(+125%)·SK하이닉스 추가 상승(+237%)이 견인. 2차전지 롱·인버스 동시 보유는 여전히 비효율.",
+      "holdings": [
+        { "ticker": "SK하이닉스", "qty": 1, "avgPrice": 697805, "price": 2349000, "value": 2349000, "pnl": 1651195, "pnlPct": 236.6, "sector": "반도체", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 5, "technical": 4, "sector": 3, "macro": 3, "sentiment": 4 }, "opinion": "비중축소", "comment": "선행PER 6.79배로 삼성전자 첫 추월·시총 1조달러. 기술 과매수·외인 패시브 매도 잔존 → 고점 분할익절.", "flags": [] },
+        { "ticker": "삼성전자", "qty": 13, "avgPrice": 243437, "price": 310500, "value": 4036500, "pnl": 871819, "pnlPct": 27.5, "sector": "반도체", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 3, "sector": 3, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "메모리 회복+B300 GPUaaS·두나무 효과. 선행이익 개선 기대. 반도체 쏠림 일부.", "flags": [] },
+        { "ticker": "삼성에스디에스", "qty": 16, "avgPrice": 132824, "price": 299000, "value": 4784000, "pnl": 2658816, "pnlPct": 125.1, "sector": "IT서비스/AX", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 3, "technical": 3, "sector": 4, "macro": 3, "sentiment": 4 }, "opinion": "비중축소", "comment": "두나무 지분 인수+엔비디아 B300 GPUaaS로 +125% 폭등. 주가가 컨센(~21만) 추월=과열 → 차익 분할 권고.", "flags": ["이벤트성 급등 과열"] },
+        { "ticker": "셀트리온", "qty": 25, "avgPrice": 255282, "price": 182500, "value": 4562500, "pnl": -1819550, "pnlPct": -28.5, "sector": "바이오", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 3, "technical": 2, "sector": 4, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "영업익 +137%·자사주 4% 소각 등 환원 강화에도 바이오 소외로 -28.5%. 순환매 시 반등 여지.", "flags": [] },
+        { "ticker": "KODEX 반도체", "qty": 35, "avgPrice": 115032, "price": 162980, "value": 5704300, "pnl": 1678180, "pnlPct": 41.7, "sector": "반도체", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 3, "sector": 3, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "SK하이닉스·삼성전자 고비중. 반도체 중복 노출 핵심 → 과집중 관리 대상.", "flags": [] },
+        { "ticker": "TIGER 2차전지테마(305540)", "qty": 500, "avgPrice": 28100, "price": 27000, "value": 13500000, "pnl": -550000, "pnlPct": -3.9, "sector": "2차전지", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 3, "technical": 3, "sector": 3, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "5월 ESS·AI전력 모멘텀 랠리(+17.84%)로 손실 -33%→-3.9% 회복. 매입가 28,100선 돌파 시 비중확대 검토. NH는 '순환매' 평가.", "flags": ["현재가 ~27,000 재확인(직전 18,900 정정)"] },
+        { "ticker": "RISE 2차전지TOP10인버스(합성)", "qty": 45, "avgPrice": 45246, "price": 12000, "value": 540000, "pnl": -1496070, "pnlPct": -73.5, "sector": "2차전지(인버스)", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 1, "technical": 1, "sector": 2, "macro": 3, "sentiment": 2 }, "opinion": "매도검토", "comment": "역방향 베팅·-73%. 2차전지 반등으로 손실 확대, 합성·롤오버·복리왜곡. 헤지 목적 아니면 정리.", "flags": ["인버스·복리왜곡", "2차전지 반등과 역방향"] },
+        { "ticker": "마키나락스", "qty": 1, "avgPrice": 42372, "price": 45200, "value": 45200, "pnl": 2828, "pnlPct": 6.7, "sector": "AI신규상장", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 3, "technical": 3, "sector": 3, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "2026-05-20 신규상장(공모가 15,000원). 피지컬AI. 실적 미검증·변동성 극심.", "flags": ["신규상장 변동성"] }
+      ]
+    },
+    {
+      "name": "연금계좌",
+      "buy": 23219817,
+      "value": 25913795,
+      "pnl": 2693978,
+      "pnlPct": 11.60,
+      "note": "세액공제·만 55세 이전 중도인출 제약. 3계좌 중 최우수(+11.6%). 고배당·미국지수가 견인. 고배당·미국대형·채권 조합이 장기·분산 성격에 부합. 나스닥100·KODEX반도체가 다른 계좌와 중복.",
+      "holdings": [
+        { "ticker": "KODEX 반도체", "qty": 10, "avgPrice": 162713, "price": 162980, "value": 1629800, "pnl": 2670, "pnlPct": 0.2, "sector": "반도체", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 3, "sector": 3, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "고점 부근 매수로 본전. 일반계좌 KODEX 반도체와 중복.", "flags": ["일반계좌와 중복"] },
+        { "ticker": "PLUS고배당주", "qty": 319, "avgPrice": 21424, "price": 27165, "value": 8665635, "pnl": 1831379, "pnlPct": 26.8, "sector": "고배당", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 4, "sector": 3, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "배당 ~3.8%·월분배, 연금 적합. 방어적 핵심 보유.", "flags": [] },
+        { "ticker": "TIGER 미국채10년선물", "qty": 126, "avgPrice": 13536, "price": 13480, "value": 1698480, "pnl": -7056, "pnlPct": -0.4, "sector": "채권", "region": "미국", "assetClass": "채권", "scores": { "fundamental": 3, "technical": 3, "sector": 3, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "유가하락·인하기대 회복으로 보험가치 재상승. 환노출. 포트 유일 채권 분산.", "flags": ["환노출"] },
+        { "ticker": "TIGER 미국S&P500", "qty": 177, "avgPrice": 23512, "price": 25065, "value": 4436505, "pnl": 274881, "pnlPct": 6.6, "sector": "미국대형주", "region": "미국", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 4, "sector": 4, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "초저보수·장기 핵심. ISA TIGER S&P500과 중복. 환노출(원약세 환차익).", "flags": ["ISA와 중복", "환노출"] },
+        { "ticker": "RISE 미국나스닥100", "qty": 111, "avgPrice": 27681, "price": 29625, "value": 3288375, "pnl": 215784, "pnlPct": 7.0, "sector": "미국기술주", "region": "미국", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 4, "sector": 4, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "보수 세계최저급. 나스닥100 3종 중복의 일부. 환노출·금리민감.", "flags": ["나스닥100 3종 중복", "환노출"] },
+        { "ticker": "TIGER 미국나스닥100", "qty": 35, "avgPrice": 166248, "price": 177000, "value": 6195000, "pnl": 376320, "pnlPct": 6.5, "sector": "미국기술주", "region": "미국", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 4, "sector": 4, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "AI capex 수혜. 나스닥100 3종 중복. 매입가 정합 확인. 환노출.", "flags": ["나스닥100 3종 중복", "환노출"] }
+      ]
+    },
+    {
+      "name": "ISA",
+      "buy": 40245906,
+      "value": 42034675,
+      "pnl": 1788769,
+      "pnlPct": 4.44,
+      "note": "비과세·분리과세 한도·만기 존재. 평가금액 최대(약 41%). SOL AI반도체TOP2(+35%)·미국지수가 견인, 일본·금 손실이 일부 상쇄. 비과세 한도 내 배당·매매차익 효율 활용 권장.",
+      "holdings": [
+        { "ticker": "SOL AI반도체TOP2플러스", "qty": 400, "avgPrice": 18671, "price": 25200, "value": 10080000, "pnl": 2611600, "pnlPct": 35.0, "sector": "반도체", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 4, "sector": 4, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "단일 최대 비중(10.4%). SK하이닉스 26.2%·삼성전기 25.6% 집중 → 반도체 쏠림 전이 핵심. AUM 3.5조.", "flags": ["반도체 쏠림 전이"] },
+        { "ticker": "KODEX SK하이닉스단일종목레버리지", "qty": 38, "avgPrice": 26404, "price": 34000, "value": 1292000, "pnl": 288648, "pnlPct": 28.8, "sector": "반도체(레버리지)", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 1, "technical": 2, "sector": 2, "macro": 2, "sentiment": 3 }, "opinion": "비중축소", "comment": "2026-05-27 신규상장. SK하이닉스 ±2배·단일종목·복리왜곡 3중. 장기보유 부적합 → 축소 1순위. 현재가 추정.", "flags": ["레버리지 복리왜곡", "신규상장", "현재가 추정"] },
+        { "ticker": "KODEX 일본TOPIX100", "qty": 37, "avgPrice": 31132, "price": 20605, "value": 762385, "pnl": -389499, "pnlPct": -33.8, "sector": "일본", "region": "일본", "assetClass": "주식", "scores": { "fundamental": 2, "technical": 3, "sector": 3, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "-34% 평가손실. 한국 쏠림 분산 효과는 있으나 환율·진입시점 부담.", "flags": ["환노출"] },
+        { "ticker": "RISE 200", "qty": 37, "avgPrice": 124340, "price": 124320, "value": 4599840, "pnl": -740, "pnlPct": -0.02, "sector": "국내대형(KOSPI200)", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 4, "sector": 3, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "국내최저 보수(0.017%). 코스피 사상최고 수혜 진행, 본전. KOSPI200 내 반도체 비중 큼.", "flags": [] },
+        { "ticker": "PLUS 고배당주", "qty": 270, "avgPrice": 26009, "price": 27165, "value": 7334550, "pnl": 312120, "pnlPct": 4.4, "sector": "고배당", "region": "국내", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 3, "sector": 3, "macro": 3, "sentiment": 3 }, "opinion": "보유", "comment": "ISA 비과세로 배당 효율 극대화. 연금계좌 PLUS고배당주와 중복.", "flags": ["연금과 중복"] },
+        { "ticker": "TIGER 미국S&P500", "qty": 390, "avgPrice": 25177, "price": 25065, "value": 9775350, "pnl": -43680, "pnlPct": -0.4, "sector": "미국대형주", "region": "미국", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 3, "sector": 4, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "본전 부근·장기 적합. 연금 TIGER S&P500과 단순 중복. 환노출.", "flags": ["연금과 중복", "환노출"] },
+        { "ticker": "KODEX 미국나스닥100", "qty": 200, "avgPrice": 27414, "price": 24450, "value": 4890000, "pnl": -592800, "pnlPct": -10.8, "sector": "미국기술주", "region": "미국", "assetClass": "주식", "scores": { "fundamental": 4, "technical": 4, "sector": 4, "macro": 3, "sentiment": 4 }, "opinion": "보유", "comment": "TR형·펀더 견조하나 -11%. 나스닥100 3종 중복. 환노출·금리민감.", "flags": ["나스닥100 3종 중복", "환노출"] },
+        { "ticker": "ACE KRX금현물", "qty": 110, "avgPrice": 33613, "price": 30005, "value": 3300550, "pnl": -396880, "pnlPct": -10.7, "sector": "금", "region": "금", "assetClass": "금", "scores": { "fundamental": 3, "technical": 3, "sector": 4, "macro": 4, "sentiment": 4 }, "opinion": "보유", "comment": "-11%이나 인플레·지정학·달러 헤지 핵심. 주식 95% 편중의 유일한 비주식 분산축. 단 지정학 완화로 헤지강도 일부 약화.", "flags": [] }
+      ]
+    }
+  ]
+};
+
+    const won = n => n==null ? "-" : "₩" + Math.round(n).toLocaleString("ko-KR");
+    const pct = n => n==null ? "-" : (n>=0?"+":"") + Number(n).toFixed(2) + "%";
+    const cls = n => n>=0 ? "up" : "down";
+    const PALETTE = ["#3b5bdb","#1c7ed6","#0ca678","#f59f00","#e8590c","#e03131",
+                     "#ae3ec9","#7048e8","#1098ad","#74b816","#f06595","#868e96"];
+    const baseOpts = { plugins:{ legend:{ labels:{ color:"#c3c8ce", font:{ size:11 } }, position:"bottom" } },
+                       maintainAspectRatio:true };
+
+    // ── 메타 / KPI ───────────────────────────────
+    document.getElementById("asOf").textContent =
+      `기준일: ${DATA.meta.asOf} · 통화: ${DATA.meta.currency} · 5관점(${DATA.meta.perspectives.join("·")})`;
+    document.getElementById("caution").textContent = "ⓘ " + DATA.meta.dataCaution;
+
+    const s = DATA.summary;
+    const kpiHtml = [
+      { l:"총 평가금액", v:won(s.totalValue), sub:`매입 ${won(s.totalBuy)}`, c:"" },
+      { l:"총 평가손익", v:won(s.totalPnl), sub:pct(s.totalPnlPct), c:cls(s.totalPnl) },
+      { l:"보유 계좌", v:`${DATA.accounts.length}개`, sub:"일반·연금·ISA", c:"" },
+      { l:"보유 종목", v:`${DATA.accounts.reduce((a,x)=>a+x.holdings.length,0)}개`, sub:"중복 포함", c:"" },
+    ].map(k=>`<div class="card"><div class="kpi-label">${k.l}</div>
+        <div class="kpi ${k.c}">${k.v}</div><div class="kpi-sub ${k.c}">${k.sub}</div></div>`).join("");
+    document.getElementById("kpis").innerHTML = kpiHtml;
+
+    document.getElementById("risks").innerHTML = s.topRisks.map(r=>`<li>${r}</li>`).join("");
+    document.getElementById("actions").innerHTML = s.topActions.map(a=>`<li>${a}</li>`).join("");
+
+    // ── 도넛 차트 (자산군/지역/섹터) ───────────────
+    function donut(id, arr){
+      new Chart(document.getElementById(id), {
+        type:"doughnut",
+        data:{ labels:arr.map(x=>`${x.name} ${x.pct}%`),
+               datasets:[{ data:arr.map(x=>x.value),
+                           backgroundColor:PALETTE, borderColor:"#1a1d24", borderWidth:2 }] },
+        options:baseOpts
+      });
+    }
+    donut("assetChart", DATA.allocation.byAssetClass);
+    donut("regionChart", DATA.allocation.byRegion);
+    donut("sectorChart", DATA.allocation.bySector);
+
+    // ── 계좌별 손익 막대 ──────────────────────────
+    new Chart(document.getElementById("acctChart"), {
+      type:"bar",
+      data:{ labels:DATA.accounts.map(a=>`${a.name} (${pct(a.pnlPct)})`),
+             datasets:[{ label:"평가손익(원)", data:DATA.accounts.map(a=>a.pnl),
+               backgroundColor:DATA.accounts.map(a=>a.pnl>=0?"#e03131":"#1c7ed6") }] },
+      options:{ ...baseOpts, plugins:{ legend:{ display:false } },
+        scales:{ y:{ ticks:{ color:"#9aa0a6", callback:v=>(v/10000).toLocaleString()+"만" } },
+                 x:{ ticks:{ color:"#c3c8ce" } } } }
+    });
+
+    // ── 계좌 탭 + 종목 카드 ───────────────────────
+    const opClass = o => o.includes("매도")?"op-sell" : o.includes("축소")?"op-cut" :
+                         o.includes("매수")||o.includes("확대")?"op-buy" : "op-hold";
+    const tabsEl = document.getElementById("tabs");
+    const viewEl = document.getElementById("accountView");
+
+    function renderAccount(idx){
+      [...tabsEl.children].forEach((t,i)=>t.classList.toggle("active", i===idx));
+      const a = DATA.accounts[idx];
+      let html = `<div class="card">
+        <div class="acct-summary">
+          <span>평가금액 <b>${won(a.value)}</b></span>
+          <span>매입금액 ${won(a.buy)}</span>
+          <span class="${cls(a.pnl)}">손익 <b>${won(a.pnl)} (${pct(a.pnlPct)})</b></span>
+        </div>
+        <div class="acct-note">${a.note}</div>`;
+
+      a.holdings.forEach((h,hi)=>{
+        const cid = `radar_${idx}_${hi}`;
+        const flags = (h.flags||[]).map(f=>`<span class="badge">${f}</span>`).join("");
+        html += `<div class="holding card" style="background:#15181f">
+          <div class="h-head">
+            <div><span class="h-name">${h.ticker}</span>
+              <span class="opinion ${opClass(h.opinion)}">${h.opinion}</span>
+              <div class="h-meta">${h.sector} · ${h.region} · ${h.assetClass} · ${h.qty}주</div></div>
+            <div class="h-pnl ${cls(h.pnl)}">${won(h.pnl)}<br><span style="font-size:.82rem">${pct(h.pnlPct)}</span></div>
+          </div>
+          <div class="h-body">
+            <div>
+              <div class="row"><span>현재가</span><span>${won(h.price)}</span></div>
+              <div class="row"><span>매입단가</span><span>${won(h.avgPrice)}</span></div>
+              <div class="row"><span>평가금액</span><span>${won(h.value)}</span></div>
+              <div class="comment">${h.comment}</div>
+              <div>${flags}</div>
+            </div>
+            <div class="radar-wrap"><canvas id="${cid}"></canvas></div>
+          </div></div>`;
+      });
+      html += `</div>`;
+      viewEl.innerHTML = html;
+
+      // 종목별 5관점 레이더
+      a.holdings.forEach((h,hi)=>{
+        const sc = h.scores;
+        new Chart(document.getElementById(`radar_${idx}_${hi}`), {
+          type:"radar",
+          data:{ labels:["펀더","기술","섹터","거시","심리"],
+                 datasets:[{ data:[sc.fundamental,sc.technical,sc.sector,sc.macro,sc.sentiment],
+                   backgroundColor:"rgba(59,91,219,0.25)", borderColor:"#3b5bdb",
+                   pointBackgroundColor:"#74c0fc" }] },
+          options:{ plugins:{ legend:{ display:false } },
+            scales:{ r:{ min:0, max:5, ticks:{ display:false, stepSize:1 },
+              grid:{ color:"#2a2e37" }, angleLines:{ color:"#2a2e37" },
+              pointLabels:{ color:"#9aa0a6", font:{ size:10 } } } } }
+        });
+      });
+    }
+
+    DATA.accounts.forEach((a,i)=>{
+      const t = document.createElement("div");
+      t.className = "tab" + (i===0?" active":"");
+      t.textContent = `${a.name} (${pct(a.pnlPct)})`;
+      t.onclick = ()=>renderAccount(i);
+      tabsEl.appendChild(t);
+    });
+    renderAccount(0);
+
+    document.getElementById("genStamp").textContent = `대시보드 생성: ${DATA.meta.asOf} · portfolio-analyzer 하네스`;
+  </script>
+</body>
+</html>
